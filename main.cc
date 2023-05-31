@@ -1,3 +1,4 @@
+#include <algorithm>
 #include <cmath>
 #include <cstddef>
 #include <iostream>
@@ -37,8 +38,11 @@ int main(int argc, const char **argv) {
   size_t largest_number = 0;
   size_t start = 90000000;
   size_t end = 100000000;
+
+  std::vector<ThreadPool::Task> tasks_to_queue;
+
   for (size_t i = start; i < end; ++i) {
-    thread_pool.add_task([i, &m, &num_results, &largest_number]() {
+    tasks_to_queue.push_back([i, &m, &num_results, &largest_number]() {
       auto result = prime_factors(i);
 
       if (result.size() == 20) {
@@ -47,7 +51,14 @@ int main(int argc, const char **argv) {
         largest_number = std::max(largest_number, i);
       }
     });
+
+    if (tasks_to_queue.size() % 100 == 0) {
+      thread_pool.add_tasks(std::move(tasks_to_queue));
+      tasks_to_queue.clear();
+    }
   }
+
+  thread_pool.add_tasks(std::move(tasks_to_queue));
 
   std::cout << "Finished adding all tasks to queue..." << std::endl;
   thread_pool.wait();
