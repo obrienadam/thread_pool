@@ -1,4 +1,5 @@
 #include <algorithm>
+#include <chrono>
 #include <cmath>
 #include <cstddef>
 #include <iostream>
@@ -29,7 +30,7 @@ std::vector<size_t> prime_factors(size_t n) {
 }
 
 int main(int argc, const char **argv) {
-  ThreadPool thread_pool(8);
+  ThreadPool thread_pool(4);
 
   // Find numbers that are the product of two prime numbers.
   std::mutex m;
@@ -41,6 +42,7 @@ int main(int argc, const char **argv) {
 
   std::vector<ThreadPool::Task> tasks_to_queue;
 
+  auto start_time = std::chrono::steady_clock::now();
   for (size_t i = start; i < end; ++i) {
     tasks_to_queue.push_back([i, &m, &num_results, &largest_number]() {
       auto result = prime_factors(i);
@@ -52,7 +54,7 @@ int main(int argc, const char **argv) {
       }
     });
 
-    if (tasks_to_queue.size() % 100 == 0) {
+    if (tasks_to_queue.size() % 200 == 0) {
       thread_pool.add_tasks(std::move(tasks_to_queue));
       tasks_to_queue.clear();
     }
@@ -64,9 +66,14 @@ int main(int argc, const char **argv) {
             << thread_pool.num_tasks_pending() << std::endl;
   thread_pool.wait();
 
-  std::cout << "Results found: " << num_results << " / " << end << " ("
-            << double(num_results) / end * 100 << "% )"
-            << "\nLargest number: " << largest_number << std::endl;
+  auto duration = std::chrono::steady_clock::now() - start_time;
+
+  std::cout
+      << "Results found: " << num_results << " / " << end << " ("
+      << double(num_results) / end * 100 << "% )"
+      << "\nLargest number: " << largest_number << "\nRun time: "
+      << std::chrono::duration_cast<std::chrono::milliseconds>(duration).count()
+      << "ms" << std::endl;
 
   return 0;
 }
