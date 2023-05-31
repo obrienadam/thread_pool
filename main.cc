@@ -60,7 +60,8 @@ int main(int argc, const char **argv) {
 
   thread_pool.add_tasks(std::move(tasks_to_queue));
 
-  std::cout << "Finished adding all tasks to queue..." << std::endl;
+  std::cout << "Finished adding all tasks to queue. Current queue size: "
+            << thread_pool.num_tasks_pending() << std::endl;
   thread_pool.wait();
 
   std::cout << "Results found: " << num_results << " / " << end << " ("

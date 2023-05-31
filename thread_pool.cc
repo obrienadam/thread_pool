@@ -1,5 +1,7 @@
 #include "thread_pool.h"
+#include <cstddef>
 #include <iterator>
+#include <mutex>
 
 ThreadPool::ThreadPool(int num_threads) {
   threads_.reserve(num_threads);
@@ -61,6 +63,11 @@ void ThreadPool::add_tasks(std::vector<Task> tasks) {
   }
 
   thread_queue.notify_all();
+}
+
+size_t ThreadPool::num_tasks_pending() const {
+  std::lock_guard lock(m);
+  return num_tasks_running + task_queue.size();
 }
 
 void ThreadPool::wait() const {

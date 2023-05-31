@@ -19,6 +19,8 @@ public:
 
   void add_tasks(std::vector<Task> tasks);
 
+  size_t num_tasks_pending() const;
+
   void wait() const;
 
 private:
